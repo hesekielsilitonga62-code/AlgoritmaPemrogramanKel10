@@ -25,7 +25,7 @@ void LoginScreen::buildUi() {
     logoLay->setAlignment(Qt::AlignHCenter);
     logoLay->setSpacing(6);
 
-    auto* lbEmoji = new QLabel("📚", logoArea);
+    auto* lbEmoji = new QLabel("", logoArea);
     lbEmoji->setAlignment(Qt::AlignCenter);
     lbEmoji->setStyleSheet("font-size:52px;");
 
@@ -57,7 +57,7 @@ void LoginScreen::buildUi() {
     headLay->setAlignment(Qt::AlignHCenter);
     headLay->setSpacing(4);
 
-    lblEmoji = new QLabel("👋", headArea);
+    lblEmoji = new QLabel("", headArea);
     lblEmoji->setAlignment(Qt::AlignCenter);
     lblEmoji->setStyleSheet("font-size:36px;");
 
@@ -84,7 +84,7 @@ void LoginScreen::buildUi() {
     cardLay->addSpacing(4);
 
     // Username
-    auto* lbUser = new QLabel("👤  Username", card);
+    auto* lbUser = new QLabel("Username", card);
     lbUser->setObjectName("fieldLabel");
     cardLay->addWidget(lbUser);
     cardLay->addSpacing(6);
@@ -96,7 +96,7 @@ void LoginScreen::buildUi() {
     cardLay->addSpacing(14);
 
     // Password
-    auto* lbPass = new QLabel("🔒  Kata Sandi", card);
+    auto* lbPass = new QLabel("Kata Sandi", card);
     lbPass->setObjectName("fieldLabelGreen");
     cardLay->addWidget(lbPass);
     cardLay->addSpacing(6);
@@ -120,7 +120,7 @@ void LoginScreen::buildUi() {
     confirmRow = new QWidget(card);
     auto* crLay = new QVBoxLayout(confirmRow);
     crLay->setContentsMargins(0,0,0,0); crLay->setSpacing(6);
-    auto* lbConfirm = new QLabel("🔒  Konfirmasi Kata Sandi", confirmRow);
+    auto* lbConfirm = new QLabel("Konfirmasi Kata Sandi", confirmRow);
     lbConfirm->setObjectName("fieldLabelGreen");
     edtPassConfirm = new QLineEdit(confirmRow);
     edtPassConfirm->setPlaceholderText("ulangi password");
@@ -133,7 +133,7 @@ void LoginScreen::buildUi() {
     cardLay->addSpacing(8);
 
     // Main button
-    btnMain = new QPushButton("🚀  Masuk", card);
+    btnMain = new QPushButton("Masuk", card);
     btnMain->setObjectName("btnMain");
     btnMain->setFixedHeight(52);
     connect(btnMain, &QPushButton::clicked, this, [this](){
@@ -173,14 +173,14 @@ void LoginScreen::handleLogin() {
     QString user = edtUser->text().trimmed();
     QString pass = edtPass->text();
     if (user.isEmpty() || pass.isEmpty()) {
-        showError("⚠️ Username dan password tidak boleh kosong");
+        showError("Username dan password tidak boleh kosong");
         return;
     }
     if (!userDb.contains(user) || userDb[user] != pass) {
-        showError("❌ Username atau password salah");
+        showError("Username atau password salah");
         return;
     }
-    showError("✅ Berhasil masuk! Selamat datang " + user, true);
+    showError("Berhasil masuk! Selamat datang " + user, true);
     auto& app = AppState::instance();
     app.currentUser = user;
     app.currentAvatar = "😀";
@@ -195,23 +195,23 @@ void LoginScreen::handleRegister() {
     QString pass = edtPass->text();
     QString conf = edtPassConfirm->text();
     if (user.isEmpty() || pass.isEmpty()) {
-        showError("⚠️ Username dan password tidak boleh kosong");
+        showError("Username dan password tidak boleh kosong");
         return;
     }
     if (pass != conf) {
-        showError("❌ Konfirmasi password tidak cocok");
+        showError("Konfirmasi password tidak cocok");
         return;
     }
     if (pass.length() < 6) {
-        showError("❌ Password minimal 6 karakter");
+        showError("Password minimal 6 karakter");
         return;
     }
     if (userDb.contains(user)) {
-        showError("❌ Username sudah digunakan");
+        showError("Username sudah digunakan");
         return;
     }
     userDb[user] = pass;
-    showError("✅ Akun berhasil dibuat! Silakan masuk.", true);
+    showError("Akun berhasil dibuat! Silakan masuk.", true);
     QTimer::singleShot(800, this, [this](){
         isRegisterMode = false;
         applyModeUi();
@@ -227,17 +227,17 @@ void LoginScreen::switchMode() {
 
 void LoginScreen::applyModeUi() {
     if (isRegisterMode) {
-        lblEmoji->setText("✏️");
+        lblEmoji->setText("");
         lblHeading->setText("Buat Akun Baru");
         lblSub->setText("Daftar gratis, mulai belajar!");
-        btnMain->setText("📝  Daftar");
+        btnMain->setText("Daftar");
         btnSwitch->setText("Sudah punya akun? Masuk");
         confirmRow->setVisible(true);
     } else {
-        lblEmoji->setText("👋");
+        lblEmoji->setText("");
         lblHeading->setText("Selamat Datang!");
         lblSub->setText("Masuk ke akunmu");
-        btnMain->setText("🚀  Masuk");
+        btnMain->setText("Masuk");
         btnSwitch->setText("Daftar");
         confirmRow->setVisible(false);
     }
@@ -246,7 +246,7 @@ void LoginScreen::applyModeUi() {
 void LoginScreen::togglePassword() {
     bool hidden = edtPass->echoMode() == QLineEdit::Password;
     edtPass->setEchoMode(hidden ? QLineEdit::Normal : QLineEdit::Password);
-    btnTogglePass->setText(hidden ? "🙈" : "👁️");
+    btnTogglePass->setText(hidden ? "" : "👁️");
 }
 
 void LoginScreen::showError(const QString& msg, bool success) {
