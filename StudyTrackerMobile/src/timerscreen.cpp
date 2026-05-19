@@ -185,7 +185,7 @@ void TimerScreen::buildUi() {
     auto* ctLay = new QHBoxLayout(ctCard); ctLay->setContentsMargins(20,12,14,12); ctLay->setSpacing(10);
     auto* ctInfo = new QWidget(ctCard);
     auto* ctIL = new QVBoxLayout(ctInfo); ctIL->setContentsMargins(0,0,0,0); ctIL->setSpacing(2);
-    auto* ctLbl = new QLabel("📌 TUGAS TERDEKAT", ctCard); ctLbl->setObjectName("closestLbl");
+    auto* ctLbl = new QLabel("TUGAS TERDEKAT", ctCard); ctLbl->setObjectName("closestLbl");
     lblClosestTask = new QLabel("Tidak ada tugas", ctCard); lblClosestTask->setObjectName("closestName");
     ctIL->addWidget(ctLbl); ctIL->addWidget(lblClosestTask);
     ctLay->addWidget(ctInfo, 1);
@@ -254,11 +254,11 @@ void TimerScreen::tick() {
         if (!app.isBreak) {
             app.sessions++;
             emit sessionCompleted(app.sessions);
-            emit notifyRequested("🎉", "Sesi Selesai!", QString("Sesi %1 selesai! Waktunya istirahat.").arg(app.sessions));
+            emit notifyRequested("", "Sesi Selesai!", QString("Sesi %1 selesai! Waktunya istirahat.").arg(app.sessions));
             app.isBreak = true;
             app.timerRemaining = app.breakMinutes * 60;
         } else {
-            emit notifyRequested("📚", "Istirahat Selesai!", "Waktunya belajar lagi! 💪");
+            emit notifyRequested("", "Istirahat Selesai!", "Waktunya belajar lagi!");
             app.isBreak = false;
             app.timerRemaining = app.focusMinutes * 60;
         }
