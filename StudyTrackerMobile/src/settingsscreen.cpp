@@ -51,7 +51,7 @@ void SettingsScreen::buildUi() {
     infoL->setContentsMargins(0,0,0,0); infoL->setSpacing(4);
     lblName   = new QLabel("Pengguna", infoW); lblName->setObjectName("profileName");
     lblStatus = new QLabel("Pelajar semangat!", infoW); lblStatus->setObjectName("labelMuted");
-    auto* btnEdit = new QPushButton("✏️ Edit Profil", infoW);
+    auto* btnEdit = new QPushButton("Edit Profil", infoW);
     btnEdit->setObjectName("btnEditProfile");
     connect(btnEdit, &QPushButton::clicked, this, [this](){
         bool ok;
@@ -76,7 +76,7 @@ void SettingsScreen::buildUi() {
     auto* notifLay  = new QVBoxLayout(notifCard);
     notifLay->setContentsMargins(0,0,0,0); notifLay->setSpacing(0);
 
-    auto* notifTitle = new QLabel("🔔 Notifikasi", notifCard);
+    auto* notifTitle = new QLabel("Notifikasi", notifCard);
     notifTitle->setObjectName("sectionTitle");
     notifTitle->setStyleSheet("padding: 12px 16px 8px;");
     notifLay->addWidget(notifTitle);
@@ -123,7 +123,7 @@ void SettingsScreen::buildUi() {
     auto* themeLay  = new QVBoxLayout(themeCard);
     themeLay->setContentsMargins(0,0,0,0); themeLay->setSpacing(0);
 
-    auto* themeTitle = new QLabel("🎨 Tema", themeCard);
+    auto* themeTitle = new QLabel("Tema", themeCard);
     themeTitle->setObjectName("sectionTitle");
     themeTitle->setStyleSheet("padding: 12px 16px 8px;");
     themeLay->addWidget(themeTitle);
@@ -174,12 +174,10 @@ void SettingsScreen::buildUi() {
     auto* aboutCard = new QFrame(inner); aboutCard->setObjectName("settingsCard");
     auto* aboutLay  = new QVBoxLayout(aboutCard);
     aboutLay->setContentsMargins(16,16,16,16); aboutLay->setSpacing(8);
-    auto* aboutTitle = new QLabel("📖 Tentang Aplikasi", aboutCard); aboutTitle->setObjectName("sectionTitle");
+    auto* aboutTitle = new QLabel("Tentang Aplikasi", aboutCard); aboutTitle->setObjectName("sectionTitle");
     auto* aboutDesc  = new QLabel(
         "Study Tracker v1.0\n"
-        "Kelompok 10 — Algoritma Pemrograman\n"
-        "Dibangun dengan C++ & Qt Framework\n"
-        "Terinspirasi dari Yeolpumta / YPT Study App",
+        "Kelompok 10 — Algoritma Pemrograman\n",
         aboutCard);
     aboutDesc->setObjectName("labelMuted");
     aboutDesc->setWordWrap(true);
@@ -188,7 +186,7 @@ void SettingsScreen::buildUi() {
     cl->addWidget(aboutCard);
 
     // ── Logout ──
-    auto* btnLogout = new QPushButton("🚪 Keluar / Logout", inner);
+    auto* btnLogout = new QPushButton("Keluar", inner);
     btnLogout->setObjectName("btnLogout");
     btnLogout->setFixedHeight(50);
     connect(btnLogout, &QPushButton::clicked, this, &SettingsScreen::logoutRequested);
