@@ -10,12 +10,12 @@ NavigationBar::NavigationBar(QWidget* parent) : QWidget(parent) {
 
     struct Def { QString screen, icon, label; };
     QList<Def> defs = {
-        {"main",     "🏠", "Home"},
-        {"tasks",    "📋", "Tugas"},
-        {"timer",    "⏱",  "Timer"},
-        {"stats",    "📊", "Statistik"},
-        {"friends",  "👥", "Teman"},
-        {"settings", "⚙️", "Setelan"},
+        {"main",     "", "Home"},
+        {"tasks",    "", "Tugas"},
+        {"timer",    "",  "Timer"},
+        {"stats",    "", "Statistik"},
+        {"friends",  "", "Teman"},
+        {"settings", "", "Setelan"},
     };
 
     for (auto& d : defs) {
