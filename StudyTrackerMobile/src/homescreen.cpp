@@ -73,7 +73,7 @@ void HomeScreen::buildUi() {
     lbHello->setObjectName("labelMuted");
     lblName   = new QLabel("Pengguna", greetArea);
     lblName->setObjectName("homeName");
-    lblStatus = new QLabel("Semangat Belajar! 💪", greetArea);
+    lblStatus = new QLabel("Semangat Belajar!", greetArea);
     lblStatus->setObjectName("homeStatus");
     greetLay->addWidget(lbHello);
     greetLay->addWidget(lblName);
@@ -187,7 +187,7 @@ void HomeScreen::buildUi() {
     // ── Task preview ──
     auto* secTitle = new QHBoxLayout();
     secTitle->setContentsMargins(20,0,20,10);
-    auto* stLbl = new QLabel("📋 Tugas Mendatang", content);
+    auto* stLbl = new QLabel("Tugas Mendatang", content);
     stLbl->setObjectName("sectionTitle");
     auto* btnSeeAll = new QPushButton("Lihat Semua →", content);
     btnSeeAll->setObjectName("btnSeeAll");
@@ -340,7 +340,7 @@ void HomeScreen::updateTaskPreview() {
     }
 
     if (shown == 0) {
-        auto* empty = new QLabel("🎯  Belum ada tugas. Tambah dulu!", taskPreviewContainer);
+        auto* empty = new QLabel("Belum ada tugas. Tambah dulu!", taskPreviewContainer);
         empty->setObjectName("labelMuted");
         empty->setAlignment(Qt::AlignCenter);
         empty->setStyleSheet("padding: 20px;");
