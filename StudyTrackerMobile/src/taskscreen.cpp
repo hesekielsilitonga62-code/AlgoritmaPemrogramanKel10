@@ -33,7 +33,7 @@ TaskDialog::TaskDialog(QWidget* parent, const Task* edit)
     lay->addWidget(edtTitle);
 
     // ── Mata Kuliah ────────────────────────────
-    auto* lbMatkul = new QLabel("📚  Mata Kuliah", this);
+    auto* lbMatkul = new QLabel("Mata Kuliah", this);
     lbMatkul->setObjectName("dlgLabel");
     lay->addWidget(lbMatkul);
 
@@ -43,7 +43,7 @@ TaskDialog::TaskDialog(QWidget* parent, const Task* edit)
     lay->addWidget(edtMatkul);
 
     // ── Deadline ───────────────────────────────
-    auto* lbDeadline = new QLabel("📅  Deadline", this);
+    auto* lbDeadline = new QLabel("Deadline", this);
     lbDeadline->setObjectName("dlgLabel");
     lay->addWidget(lbDeadline);
 
@@ -82,9 +82,9 @@ TaskDialog::TaskDialog(QWidget* parent, const Task* edit)
     auto* priRow = new QHBoxLayout();
     priRow->setSpacing(8);
 
-    btnHigh = new QPushButton("🔴  Tinggi", this); btnHigh->setObjectName("btnPriHigh");
-    btnMed  = new QPushButton("🟡  Sedang", this); btnMed->setObjectName("btnPriMed");
-    btnLow  = new QPushButton("🟢  Rendah", this); btnLow->setObjectName("btnPriLow");
+    btnHigh = new QPushButton("Tinggi", this); btnHigh->setObjectName("btnPriHigh");
+    btnMed  = new QPushButton("Sedang", this); btnMed->setObjectName("btnPriMed");
+    btnLow  = new QPushButton("Rendah", this); btnLow->setObjectName("btnPriLow");
 
     for (auto* b : {btnHigh, btnMed, btnLow}) {
         b->setFixedHeight(42);
@@ -109,7 +109,7 @@ TaskDialog::TaskDialog(QWidget* parent, const Task* edit)
     btnCancel->setObjectName("btnCancel");
     btnCancel->setFixedHeight(48);
 
-    auto* btnSave = new QPushButton("💾  Simpan", this);
+    auto* btnSave = new QPushButton("Simpan", this);
     btnSave->setObjectName("btnSave");
     btnSave->setFixedHeight(48);
 
@@ -117,7 +117,7 @@ TaskDialog::TaskDialog(QWidget* parent, const Task* edit)
     connect(btnSave,   &QPushButton::clicked, this, [this]{
         if (edtTitle->text().trimmed().isEmpty()) {
             edtTitle->setFocus();
-            edtTitle->setPlaceholderText("⚠️ Judul tidak boleh kosong!");
+            edtTitle->setPlaceholderText("Judul tidak boleh kosong!");
             return;
         }
         accept();
@@ -367,7 +367,7 @@ void TaskScreen::buildUi() {
     // ── Page header ──
     auto* ph  = new QWidget(this); ph->setObjectName("pageHeader");
     auto* phL = new QHBoxLayout(ph); phL->setContentsMargins(20,12,20,12);
-    auto* phIcon  = new QLabel("📋", ph); phIcon->setStyleSheet("font-size:22px;");
+    auto* phIcon  = new QLabel("", ph); phIcon->setStyleSheet("font-size:22px;");
     auto* phTitle = new QLabel("Tugas", ph); phTitle->setObjectName("pageTitle");
     lblCount = new QLabel("", ph); lblCount->setObjectName("taskBadge");
     lblCount->setVisible(false);
@@ -404,7 +404,7 @@ static QString sisaWaktu(qint64 deadlineTs) {
     qint64 now  = QDateTime::currentMSecsSinceEpoch();
     qint64 diff = deadlineTs - now;
 
-    if (diff <= 0) return "⚠️ Sudah lewat!";
+    if (diff <= 0) return "Sudah lewat!";
 
     int totalMins = (int)(diff / 60000);
     int d = totalMins / 1440;
@@ -442,7 +442,7 @@ void TaskScreen::renderTasks() {
     lblCount->setVisible(pending > 0);
 
     if (tasks.isEmpty()) {
-        auto* empty = new QLabel("🎯  Belum ada tugas.\nTekan '+ Tambah' untuk mulai!",
+        auto* empty = new QLabel("Belum ada tugas.\nTekan '+ Tambah' untuk mulai!",
                                  listContainer);
         empty->setObjectName("labelMuted");
         empty->setAlignment(Qt::AlignCenter);
@@ -507,11 +507,11 @@ void TaskScreen::renderTasks() {
         // Priority badge
         QString pBg, pColor, pBorder, pText;
         if (task.priority == 2) {
-            pBg="#ff555538"; pColor="#ff8080"; pBorder="rgba(255,85,85,76)"; pText="🔴 TINGGI";
+            pBg="#ff555538"; pColor="#ff8080"; pBorder="rgba(255,85,85,76)"; pText="TINGGI";
         } else if (task.priority == 1) {
-            pBg="rgba(255,165,0,38)"; pColor="#ffaa44"; pBorder="rgba(255,165,0,76)"; pText="🟡 SEDANG";
+            pBg="rgba(255,165,0,38)"; pColor="#ffaa44"; pBorder="rgba(255,165,0,76)"; pText="SEDANG";
         } else {
-            pBg="rgba(5,214,5,30)"; pColor="#44cc44"; pBorder="rgba(5,214,5,64)"; pText="🟢 RENDAH";
+            pBg="rgba(5,214,5,30)"; pColor="#44cc44"; pBorder="rgba(5,214,5,64)"; pText="RENDAH";
         }
         auto* priBadge = new QLabel(pText, card);
         priBadge->setStyleSheet(QString(
