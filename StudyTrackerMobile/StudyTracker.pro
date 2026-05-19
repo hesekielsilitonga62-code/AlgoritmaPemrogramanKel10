@@ -33,9 +33,3 @@ HEADERS += \
     src/styles.h
 
 RESOURCES += resources/resources.qrc
-
-# Android config (opsional, aktifkan jika build ke Android)
-# android {
-#     ANDROID_MIN_SDK_VERSION = 21
-#     ANDROID_TARGET_SDK_VERSION = 33
-# }
