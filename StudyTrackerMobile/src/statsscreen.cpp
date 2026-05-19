@@ -70,7 +70,7 @@ void StatsScreen::buildUi() {
     // Weekly chart
     auto* chartCard = new QFrame(inner); chartCard->setObjectName("weeklyChartCard");
     auto* chartLay  = new QVBoxLayout(chartCard); chartLay->setContentsMargins(18,16,18,16); chartLay->setSpacing(12);
-    auto* chartTitle = new QLabel("📈 Aktivitas 7 Hari Terakhir", chartCard); chartTitle->setObjectName("chartTitle");
+    auto* chartTitle = new QLabel("Aktivitas 7 Hari Terakhir", chartCard); chartTitle->setObjectName("chartTitle");
     chartLay->addWidget(chartTitle);
 
     auto* barArea = new QWidget(chartCard);
@@ -111,7 +111,7 @@ void StatsScreen::buildUi() {
     cl->addWidget(chartCard);
 
     // Top tasks section
-    auto* taskTitle = new QLabel("🏆 Mata Kuliah Terbanyak", inner);
+    auto* taskTitle = new QLabel("Mata Kuliah Terbanyak", inner);
     taskTitle->setObjectName("sectionTitle");
     cl->addWidget(taskTitle);
 
