@@ -356,6 +356,54 @@ ApplicationWindow {
         ListElement { name: "Sandi"; status: "Online • Mengerjakan Tugas"; isOnline: true; initial: "S" }
         ListElement { name: "Willy"; status: "Online • Ngoding"; isOnline: true; initial: "W" }
         ListElement { name: "Yehezkiel"; status: "Offline • Terakhir 6h lalu"; isOnline: false; initial: "Y" }
+        ListElement { name: "Kobo"; status: "Online • Bermain Game"; isOnline: true; initial: "K" }
+        ListElement { name: "Nana"; status: "Offline"; isOnline: false; initial: "N" }
+        ListElement { name: "Cici"; status: "Online • Ngoding"; isOnline: true; initial: "C" }
+        ListElement { name: "Zeta"; status: "Online • Belajar"; isOnline: true; initial: "Z" }
+        ListElement { name: "Nazwa"; status: "Online • Membaca"; isOnline: true; initial: "N" }
+        ListElement { name: "Sunny"; status: "Offline"; isOnline: false; initial: "S" }
+        ListElement { name: "Koko"; status: "Offline"; isOnline: false; initial: "K" }
+        ListElement { name: "Fitri"; status: "Offline"; isOnline: false; initial: "F" }
+        ListElement { name: "Airin"; status: "Offline"; isOnline: false; initial: "A" }
+        ListElement { name: "Lapu-Lapu"; status: "Offline"; isOnline: false; initial: "L" }
+        ListElement { name: "Aira"; status: "Offline"; isOnline: false; initial: "A" }
+        ListElement { name: "Emu Otori"; status: "Offline"; isOnline: false; initial: "E" }
+        ListElement { name: "Tsukasa"; status: "Offline"; isOnline: false; initial: "T" }
+        ListElement { name: "Toya"; status: "Offline"; isOnline: false; initial: "T" }
+        ListElement { name: "Aoyagi"; status: "Online • Bermain Musik"; isOnline: false; initial: "A" }
+        ListElement { name: "Zyo"; status: "Online"; isOnline: true; initial: "Z" }
+        ListElement { name: "Carmen"; status: "Online • Belajar"; isOnline: true; initial: "C" }
+        ListElement { name: "Yeon"; status: "Online • Membaca"; isOnline: true; initial: "Y" }
+        ListElement { name: "Yaya"; status: "Online • Belajar"; isOnline: true; initial: "Y" }
+        ListElement { name: "Kobo"; status: "Online • Bermain Game"; isOnline: true; initial: "K" }
+        ListElement { name: "Rosblok"; status: "Online • Bermain Game"; isOnline: true; initial: "R" }
+        ListElement { name: "Bill Gates"; status: "Online"; isOnline: true; initial: "B" }
+        ListElement { name: "Einstein"; status: "Offline"; isOnline: false; initial: "E" }
+        ListElement { name: "Enanan"; status: "Offline"; isOnline: false; initial: "E" }
+        ListElement { name: "Lucy"; status: "Offline"; isOnline: false; initial: "L" }
+        ListElement { name: "Lulu"; status: "Offline"; isOnline: false; initial: "L" }
+        ListElement { name: "Aqila"; status: "Offline"; isOnline: false; initial: "A" }
+        ListElement { name: "Mama"; status: "Offline"; isOnline: false; initial: "M" }
+        ListElement { name: "Mimi"; status: "Offline"; isOnline: false; initial: "M" }
+        ListElement { name: "Momo"; status: "Offline"; isOnline: false; initial: "M" }
+        ListElement { name: "Pororo"; status: "Offline"; isOnline: false; initial: "P" }
+        ListElement { name: "Chikawa"; status: "Offline"; isOnline: false; initial: "C" }
+        ListElement { name: "Usagi"; status: "Offline"; isOnline: false; initial: "U" }
+        ListElement { name: "Hachiware"; status: "Offline"; isOnline: false; initial: "H" }
+        ListElement { name: "Momonga"; status: "Offline"; isOnline: false; initial: "M" }
+        ListElement { name: "Kurimanju"; status: "Offline"; isOnline: false; initial: "K" }
+        ListElement { name: "Soto"; status: "Offline"; isOnline: false; initial: "S" }
+        ListElement { name: "Sawako"; status: "Offline"; isOnline: false; initial: "S" }
+        ListElement { name: "Miyamura"; status: "Offline"; isOnline: false; initial: "M" }
+        ListElement { name: "Moona"; status: "Offline"; isOnline: false; initial: "M" }
+        ListElement { name: "Pekora"; status: "Offline"; isOnline: false; initial: "P" }
+        ListElement { name: "Risu"; status: "Offline"; isOnline: false; initial: "R" }
+        ListElement { name: "Ayunda"; status: "Offline"; isOnline: false; initial: "A" }
+        ListElement { name: "Kiki"; status: "Offline"; isOnline: false; initial: "K" }
+        ListElement { name: "Tiki"; status: "Offline"; isOnline: false; initial: "T" }
+        ListElement { name: "Wonhee"; status: "Offline"; isOnline: false; initial: "W" }
+        ListElement { name: "Moka"; status: "Offline"; isOnline: false; initial: "M" }
+        ListElement { name: "Gehlee"; status: "Offline"; isOnline: false; initial: "G" }
     }
 
     ListModel { id: chatModel }
