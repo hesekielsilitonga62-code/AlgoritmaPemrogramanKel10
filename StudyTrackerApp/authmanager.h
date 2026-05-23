@@ -19,8 +19,6 @@ public:
     Q_INVOKABLE bool resetPassword(QString username, QString oldPassword, QString newPassword);
 
     // ── User Profile & Data ─────────────────────────────────────────────────
-    // Dipanggil dari QML saat logout / pindah halaman
-    // tasks: QVariantList berisi QVariantMap per task (dari globalTaskModel)
     Q_INVOKABLE void saveUserData(const QString &username,
                                   const QString &namaUser,
                                   const QString &statusUser,
@@ -29,9 +27,14 @@ public:
                                   int            secondsFocused,
                                   const QVariantList &tasks);
 
-    // Mengembalikan semua data user sebagai QVariantMap ke QML
-    // QML bisa akses: result.namaUser, result.tasks, dsb.
     Q_INVOKABLE QVariantMap loadUserData(const QString &username);
+
+    // ── Crop & Save ─────────────────────────────────────────────────────────
+    // Memotong gambar di path `sourcePath` dengan koordinat (x, y, w, h)
+    // dalam skala gambar asli, lalu menyimpannya ke file temp.
+    // Mengembalikan path file hasil crop (sebagai "file:///...") atau "" jika gagal.
+    Q_INVOKABLE QString cropAndSave(const QString &sourcePath,
+                                    int x, int y, int w, int h);
 
 private:
     QSettings m_settings;
