@@ -231,7 +231,7 @@ Rectangle {
                 MouseArea {
                     id: backArea; anchors.fill: parent
                     cursorShape: Qt.PointingHandCursor; hoverEnabled: true
-                    onClicked: pageLoader.sourceComponent = mainComponent
+                    onClicked: pageStack.pop()
                 }
             }
 
@@ -461,7 +461,7 @@ Rectangle {
                                         opacity: model.isDone ? 0.6 : 1.0
                                     }
                                     Text {
-                                        text: "Deadline: " + model.deadline
+                                        text: lang.deadline + ": " + model.deadline
                                         color: window.textMuted; font.pixelSize: 11
                                     }
                                 }
