@@ -4,7 +4,7 @@ project(StudyTrackerApp VERSION 0.1 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-find_package(Qt6 REQUIRED COMPONENTS Quick Core Multimedia)
+find_package(Qt6 REQUIRED COMPONENTS Quick Widgets Network Gui)
 
 qt_standard_project_setup(REQUIRES 6.10)
 
@@ -17,17 +17,19 @@ qt_add_qml_module(appStudyTrackerApp
     QML_FILES
         Main.qml
         SOURCES authmanager.h authmanager.cpp
-        RESOURCES
-        QML_FILES MainMenu.qml
         QML_FILES InputTugas.qml
-        QML_FILES TimerBelajar.qml
-        QML_FILES TemanPage.qml
-        QML_FILES StudyRoomPage.qml
-        QML_FILES StatistikPage.qml
-        QML_FILES SettingsPage.qml
-        QML_FILES
         QML_FILES Languange.qml
         QML_FILES Login.qml
+        QML_FILES MainMenu.qml
+        QML_FILES SettingsPage.qml
+        QML_FILES StatistikPage.qml
+        QML_FILES StudyRoomPage.qml
+        QML_FILES TemanPage.qml
+        QML_FILES TimerBelajar.qml
+    RESOURCES
+        borders/kawaii.png
+        borders/rainbow.png
+        borders/galaxy.png
 )
 
 set_target_properties(appStudyTrackerApp PROPERTIES
@@ -38,7 +40,7 @@ set_target_properties(appStudyTrackerApp PROPERTIES
 )
 
 target_link_libraries(appStudyTrackerApp
-    PRIVATE Qt6::Quick Qt6::Core Qt6::Multimedia
+    PRIVATE Qt6::Quick Qt6::Widgets Qt6::Network Qt6::Gui
 )
 
 install(TARGETS appStudyTrackerApp
