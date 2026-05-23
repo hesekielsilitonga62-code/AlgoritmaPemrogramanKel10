@@ -3,16 +3,16 @@
 #include <QJsonDocument>
 #include <QJsonArray>
 #include <QJsonObject>
+#include <QPixmap>
+#include <QImage>
+#include <QDir>
+#include <QStandardPaths>
+#include <QUrl>
 
-// QSettings akan menyimpan data di lokasi standar OS:
-//   Windows : HKEY_CURRENT_USER\Software\StudyTracker\StudyTrackerApp
-//   Linux   : ~/.config/StudyTracker/StudyTrackerApp.ini
-//   macOS   : ~/Library/Preferences/com.StudyTracker.StudyTrackerApp.plist
 AuthManager::AuthManager(QObject *parent)
     : QObject(parent),
     m_settings("StudyTracker", "StudyTrackerApp")
 {
-    // Seed akun admin hanya jika belum pernah terdaftar sebelumnya
     if (!checkUserExists("admin")) {
         writePassword("admin", "1234");
         qDebug() << "[AuthManager] Akun admin di-seed untuk pertama kali.";
@@ -53,14 +53,13 @@ bool AuthManager::registerUser(QString username, QString password)
     }
     writePassword(username, password);
 
-    // Inisialisasi profil kosong untuk user baru
     QString prefix = "Users/data/" + username + "/";
     m_settings.setValue(prefix + "namaUser",          username);
     m_settings.setValue(prefix + "statusUser",        "Semangat Belajar! 💪");
     m_settings.setValue(prefix + "selectedAvatar",    0);
     m_settings.setValue(prefix + "sessionsCompleted", 0);
     m_settings.setValue(prefix + "secondsFocused",    0);
-    m_settings.setValue(prefix + "tasks",             QString("[]")); // JSON array kosong
+    m_settings.setValue(prefix + "tasks",             QString("[]"));
     m_settings.sync();
 
     qDebug() << "[AuthManager] User baru terdaftar:" << username;
@@ -74,9 +73,78 @@ bool AuthManager::checkUserExists(QString username)
 
 bool AuthManager::resetPassword(QString username, QString oldPassword, QString newPassword) {
     if (!checkUserExists(username)) return false;
-    if (readPassword(username) != oldPassword) return false; // verifikasi dulu
+    if (readPassword(username) != oldPassword) return false;
     writePassword(username, newPassword);
     return true;
+}
+
+// ─── Crop & Save ───────────────────────────────────────────────────────────
+
+QString AuthManager::cropAndSave(const QString &sourcePath,
+                                 int x, int y, int w, int h)
+{
+    // sourcePath dari QML bisa berupa "file:///C:/..." — konversi ke path lokal
+    QString localPath = QUrl(sourcePath).toLocalFile();
+    if (localPath.isEmpty()) localPath = sourcePath; // fallback
+
+    QImage original(localPath);
+    if (original.isNull()) {
+        qDebug() << "[cropAndSave] Gagal load gambar:" << localPath;
+        return "";
+    }
+
+    // Skala: gambar ditampilkan 200x200 di QML dengan PreserveAspectCrop
+    // Kita perlu tahu skala antara gambar asli dan ukuran display 200x200
+    double scaleX = (double)original.width()  / 200.0;
+    double scaleY = (double)original.height() / 200.0;
+
+    // Pakai skala yang lebih kecil (sama dengan PreserveAspectCrop)
+    double scale = qMax(scaleX, scaleY);
+
+    // Hitung ukuran gambar setelah di-scale ke 200x200
+    int scaledW = (int)(original.width()  / scale);
+    int scaledH = (int)(original.height() / scale);
+
+    // Offset awal (gambar di-center dalam 200x200 oleh PreserveAspectCrop)
+    int centerOffX = (200 - scaledW) / 2;
+    int centerOffY = (200 - scaledH) / 2;
+
+    // Koordinat crop dalam gambar asli
+    // x/y dari QML adalah offset display (sudah dalam unit pixel 200x200)
+    int cropX = (int)((-x - centerOffX) * scale);
+    int cropY = (int)((-y - centerOffY) * scale);
+    int cropW = (int)(w * scale);
+    int cropH = (int)(h * scale);
+
+    // Clamp agar tidak keluar batas gambar
+    cropX = qMax(0, qMin(cropX, original.width()  - 1));
+    cropY = qMax(0, qMin(cropY, original.height() - 1));
+    cropW = qMin(cropW, original.width()  - cropX);
+    cropH = qMin(cropH, original.height() - cropY);
+
+    if (cropW <= 0 || cropH <= 0) {
+        qDebug() << "[cropAndSave] Area crop tidak valid:" << cropX << cropY << cropW << cropH;
+        return "";
+    }
+
+    // Crop dan resize ke 200x200
+    QImage cropped = original.copy(cropX, cropY, cropW, cropH)
+                         .scaled(200, 200, Qt::IgnoreAspectRatio, Qt::SmoothTransformation);
+
+    // Simpan ke folder temp
+    QString tempDir = QStandardPaths::writableLocation(QStandardPaths::TempLocation)
+                      + "/StudyTrackerApp";
+    QDir().mkpath(tempDir);
+    QString outPath = tempDir + "/avatar_crop.png";
+
+    if (!cropped.save(outPath, "PNG")) {
+        qDebug() << "[cropAndSave] Gagal menyimpan hasil crop ke:" << outPath;
+        return "";
+    }
+
+    qDebug() << "[cropAndSave] Berhasil crop ke:" << outPath;
+    // Kembalikan sebagai file URL agar QML bisa langsung pakai sebagai Image.source
+    return QUrl::fromLocalFile(outPath).toString();
 }
 
 // ─── User Data API ─────────────────────────────────────────────────────────
@@ -101,8 +169,6 @@ void AuthManager::saveUserData(const QString     &username,
     m_settings.setValue(prefix + "sessionsCompleted", sessionsCompleted);
     m_settings.setValue(prefix + "secondsFocused",    secondsFocused);
 
-    // Simpan tasks sebagai JSON string
-    // tasks dari QML adalah QVariantList berisi QVariantMap
     QJsonArray jsonArray;
     for (const QVariant &taskVariant : tasks) {
         QVariantMap taskMap = taskVariant.toMap();
@@ -112,8 +178,7 @@ void AuthManager::saveUserData(const QString     &username,
     m_settings.setValue(prefix + "tasks", QString::fromUtf8(doc.toJson(QJsonDocument::Compact)));
     m_settings.sync();
 
-    qDebug() << "[AuthManager] Data user" << username << "disimpan."
-             << "Tasks:" << jsonArray.size();
+    qDebug() << "[AuthManager] Data user" << username << "disimpan. Tasks:" << jsonArray.size();
 }
 
 QVariantMap AuthManager::loadUserData(const QString &username)
@@ -122,7 +187,7 @@ QVariantMap AuthManager::loadUserData(const QString &username)
 
     if (!checkUserExists(username)) {
         qDebug() << "[AuthManager] loadUserData gagal - user tidak ditemukan:" << username;
-        return result; // return map kosong
+        return result;
     }
 
     QString prefix = "Users/data/" + username + "/";
@@ -133,7 +198,6 @@ QVariantMap AuthManager::loadUserData(const QString &username)
     result["sessionsCompleted"] = m_settings.value(prefix + "sessionsCompleted", 0).toInt();
     result["secondsFocused"]    = m_settings.value(prefix + "secondsFocused",    0).toInt();
 
-    // Parse tasks dari JSON string kembali ke QVariantList
     QString tasksJson = m_settings.value(prefix + "tasks", QString("[]")).toString();
     QJsonDocument doc = QJsonDocument::fromJson(tasksJson.toUtf8());
     QVariantList taskList;
@@ -144,7 +208,6 @@ QVariantMap AuthManager::loadUserData(const QString &username)
     }
     result["tasks"] = taskList;
 
-    qDebug() << "[AuthManager] Data user" << username << "dimuat."
-             << "Tasks:" << taskList.size();
+    qDebug() << "[AuthManager] Data user" << username << "dimuat. Tasks:" << taskList.size();
     return result;
 }
