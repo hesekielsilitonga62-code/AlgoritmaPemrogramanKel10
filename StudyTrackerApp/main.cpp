@@ -1,15 +1,18 @@
 #include <QGuiApplication>
 #include <QQmlApplicationEngine>
 #include <QQmlContext>
+#include <QSslConfiguration>
 #include "authmanager.h"
 
 int main(int argc, char *argv[])
 {
     QGuiApplication app(argc, argv);
+
+    QSslConfiguration::setDefaultConfiguration(QSslConfiguration::defaultConfiguration());
+
     AuthManager auth;
     QQmlApplicationEngine engine;
 
-    // Daftarkan backend SEBELUM load
     engine.rootContext()->setContextProperty("backend", &auth);
 
     QObject::connect(
