@@ -2,12 +2,6 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 
-// ════════════════════════════════════════════════════════════════════════
-// Login.qml — Halaman Login & Registrasi (Redesign)
-// Card mengikuti warna tema aktif (accentColor, bgCard, dll)
-// Field username & password dipisah jadi bubble sendiri-sendiri
-// ════════════════════════════════════════════════════════════════════════
-
 Rectangle {
     id: loginRoot
     anchors.fill: parent
