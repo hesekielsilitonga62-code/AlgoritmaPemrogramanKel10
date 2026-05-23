@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import QtMultimedia
+import QtQuick.Dialogs
 import StudyTrackerApp
 
 Rectangle {
@@ -15,6 +16,8 @@ Rectangle {
     property string namaUser:       window.namaUser
     property string statusUser:     window.statusUser
     property int    selectedAvatar: window.selectedAvatar
+    property string customAvatarPath: window.customAvatarPath
+    onCustomAvatarPathChanged: window.customAvatarPath = customAvatarPath
 
     onNamaUserChanged:        window.namaUser       = namaUser
     onStatusUserChanged:      window.statusUser     = statusUser
@@ -72,6 +75,18 @@ Rectangle {
         NumberAnimation { id: showNotifAnim; target: notifPopup; property: "opacity"; from: 0; to: 1; duration: 300 }
         NumberAnimation { id: hideNotifAnim; target: notifPopup; property: "opacity"; from: 1; to: 0; duration: 300; onFinished: notifPopup.visible = false }
         Timer { id: autoHideNotif; interval: 3000; onTriggered: hideNotifAnim.start() }
+    }
+
+    FileDialog {
+        id: avatarFilePicker
+        title: lang.uploadFotoProfil
+        nameFilters: [lang.filterGambar]
+        onAccepted: {
+            cropPopup.imagePath = selectedFile
+            cropPopup.offsetX   = 0
+            cropPopup.offsetY   = 0
+            cropPopup.open()
+        }
     }
 
     function showNotif(text) {
@@ -161,7 +176,7 @@ Rectangle {
                     Layout.fillWidth: true; height: 40; radius: 10; color: window.borderColor
                     Text { text: "◀ " + lang.mainMenu; color: window.textPrimary; font.bold: true; anchors.centerIn: parent }
                     MouseArea {
-                        anchors.fill: parent; onClicked: pageLoader.sourceComponent = mainComponent
+                        anchors.fill: parent; onClicked: pageStack.pop()
                         onPressed: parent.opacity = 0.7; onReleased: parent.opacity = 1.0
                     }
                 }
@@ -205,22 +220,132 @@ Rectangle {
             QtObject { id: settingStack; property string currentId: "profil" }
 
             // ── PROFIL ────────────────────────────────────────────────────────
-            ColumnLayout {
-                anchors.fill: parent; anchors.margins: 32; spacing: 14
+            ScrollView {
+                id: profilScrollView
+                anchors.fill: parent
                 visible: settingStack.currentId === "profil"
+                contentWidth: availableWidth
+                ScrollBar.horizontal.policy: ScrollBar.AlwaysOff
+                ScrollBar.vertical.policy: ScrollBar.AsNeeded
 
-                SectionTitle { judul: lang.profilPengguna }
+                ColumnLayout {
+                    id: profilContent
+                    width: profilScrollView.availableWidth - 64
+                    x: 32
+                    y: 32
+                    spacing: 14
 
-                Rectangle {
-                    Layout.fillWidth: true; height: 100
-                    color: window.bgSecondary; radius: 14; border.color: window.borderColor
-                    RowLayout {
-                        anchors.fill: parent; anchors.margins: 20; spacing: 20
-                        Rectangle {
-                            width: 64; height: 64; radius: 32; color: window.borderColor
-                            border.color: window.accentColor; border.width: 2
-                            Text { anchors.centerIn: parent; text: root.avatarList[root.selectedAvatar]; font.pixelSize: 32 }
-                        }
+                    SectionTitle { judul: lang.profilPengguna }
+
+                    Rectangle {
+                        Layout.fillWidth: true; height: 100
+                        color: window.bgSecondary; radius: 14; border.color: window.borderColor
+                        RowLayout {
+                            anchors.fill: parent; anchors.margins: 20; spacing: 20
+                            Item {
+                                width: 88; height: 88
+
+                                // ── Foto/emoji avatar — terpotong lingkaran sempurna ──
+                                Rectangle {
+                                    anchors.fill: parent   // 88×88
+                                    radius: width / 2      // bentuk lingkaran
+                                    color: window.bgSecondary
+                                    clip: true             // potong semua child sesuai radius lingkaran
+                                    z: 1
+
+                                    // Layer foto — hanya muncul kalau ada customAvatarPath
+                                    Rectangle {
+                                        anchors.fill: parent
+                                        radius: parent.radius
+                                        clip: true          // clip kedua untuk pastikan lingkaran
+                                        color: "transparent"
+                                        visible: root.customAvatarPath !== ""
+
+                                        Image {
+                                            anchors.fill: parent
+                                            source: root.customAvatarPath !== "" ? root.customAvatarPath : ""
+                                            fillMode: Image.PreserveAspectCrop
+                                            // offset sudah 0 karena hasil cropAndSave sudah persegi
+                                        }
+                                    }
+
+                                    // Layer emoji — muncul kalau tidak ada foto
+                                    Text {
+                                        anchors.centerIn: parent
+                                        text: (root.selectedAvatar >= 0 && root.selectedAvatar < root.avatarList.length)
+                                              ? root.avatarList[root.selectedAvatar] : "📷"
+                                        font.pixelSize: 38
+                                        visible: root.customAvatarPath === ""
+                                    }
+                                }
+
+                                // ── Border PNG berputar di atas ──
+                                Image {
+                                    id: settProfileBorderPng
+                                    anchors.centerIn: parent
+                                    width: 88; height: 88
+                                    source: (window.selectedBorder >= 1 && window.selectedBorder <= 3)
+                                            ? (window.borderAssets[window.selectedBorder] ?? "") : ""
+                                    fillMode: Image.PreserveAspectFit
+                                    visible: (window.selectedBorder >= 1 && window.selectedBorder <= 3)
+                                    z: 2
+                                    RotationAnimator {
+                                        target: settProfileBorderPng; from: 0; to: 360
+                                        duration: 5000; loops: Animation.Infinite
+                                        running: settProfileBorderPng.visible
+                                    }
+                                }
+
+                                // ── Border gradasi Canvas (id 4-49) ──
+                                Canvas {
+                                    id: profileBorderCanvas
+                                    anchors.centerIn: parent
+                                    width: 88; height: 88
+                                    z: 2
+                                    visible: window.selectedBorder >= 4
+
+                                    property real angle: 0
+                                    NumberAnimation on angle {
+                                        from: 0; to: Math.PI * 2
+                                        duration: window.selectedBorder >= 4 ? window.borderDefs[window.selectedBorder].dur : 2000
+                                        loops: Animation.Infinite
+                                        running: profileBorderCanvas.visible
+                                    }
+                                    onAngleChanged: requestPaint()
+                                    onVisibleChanged: requestPaint()
+                                    onPaint: {
+                                        var ctx = getContext("2d")
+                                        ctx.clearRect(0, 0, width, height)
+                                        var idx = window.selectedBorder
+                                        if (idx < 4 || idx >= window.borderDefs.length) return
+                                        var def = window.borderDefs[idx]
+                                        var cx = width / 2, cy = height / 2
+                                        var x1 = cx + Math.cos(angle) * cx
+                                        var y1 = cy + Math.sin(angle) * cy
+                                        var x2 = cx + Math.cos(angle + Math.PI) * cx
+                                        var y2 = cy + Math.sin(angle + Math.PI) * cy
+                                        var grad = ctx.createLinearGradient(x1, y1, x2, y2)
+                                        grad.addColorStop(0, def.c1)
+                                        grad.addColorStop(1, def.c2)
+                                        ctx.strokeStyle = grad
+                                        ctx.lineWidth = def.lw
+                                        ctx.beginPath()
+                                        ctx.arc(cx, cy, cx - def.lw / 2 - 1, 0, Math.PI * 2)
+                                        ctx.stroke()
+                                    }
+                                }
+
+                                // ── Ring default (border 0) ──
+                                Rectangle {
+                                    anchors.centerIn: parent
+                                    width: 88; height: 88; radius: 44
+                                    color: "transparent"
+                                    border.color: window.selectedBorder === 0 ? window.accentColor : "transparent"
+                                    border.width: 2
+                                    z: 2
+                                }
+                            }
+
                         Column {
                             spacing: 4; Layout.fillWidth: true
                             Text { text: window.namaUser;   color: window.textPrimary; font.pixelSize: 18; font.bold: true }
@@ -229,7 +354,87 @@ Rectangle {
                     }
                 }
 
+                SectionTitle { judul: lang.namaTampilan }
+                Rectangle {
+                    Layout.fillWidth: true; height: 52; color: window.bgSecondary; radius: 12; border.color: window.borderColor
+                    TextField {
+                        anchors.fill: parent; anchors.margins: 4;
+                        color: window.textPrimary; font.pixelSize: 14; padding: 12; placeholderText: lang.namaKamu
+                        background: Rectangle { color: "transparent" }
+                        Component.onCompleted: text = window.namaUser
+                        onTextChanged: { root.namaUser = text; window.namaUser = text }
+                    }
+                }
+
+                SectionTitle { judul: lang.statusLabel }
+                Rectangle {
+                    Layout.fillWidth: true; height: 52; color: window.bgSecondary; radius: 12; border.color: window.borderColor
+                    TextField {
+                        anchors.fill: parent; anchors.margins: 4;
+                        color: window.textPrimary; font.pixelSize: 14; padding: 12; placeholderText: "Status kamu..."
+                        background: Rectangle { color: "transparent" }
+                        Component.onCompleted: text = window.statusUser
+                        onTextChanged: { root.statusUser = text; window.statusUser = text }
+                    }
+                }
+
                 SectionTitle { judul: lang.pilihAvatar }
+
+                Rectangle {
+                    Layout.fillWidth: true; height: 60
+                    color: uploadArea.containsMouse
+                           ? Qt.rgba(window.accentColor.r, window.accentColor.g, window.accentColor.b, 0.12)
+                           : window.bgSecondary
+                    radius: 12; border.color: root.customAvatarPath !== "" ? "#2ecc71" : window.accentColor; border.width: 1.5
+
+                    RowLayout {
+                        anchors.fill: parent; anchors.margins: 14; spacing: 12
+                        Rectangle {
+                            width: 36; height: 36; radius: 8
+                            color: root.customAvatarPath !== "" ? Qt.rgba(46/255,204/255,113/255,0.15) : Qt.rgba(255/255,204/255,0/255,0.1)
+                            Text { anchors.centerIn: parent; text: root.customAvatarPath !== "" ? "✓" : "🖼️"; font.pixelSize: 18 }
+                        }
+                        Column {
+                            spacing: 2; Layout.fillWidth: true
+                            Text {
+                                text: root.customAvatarPath !== "" ? lang.fotoBerhasilDipilih : lang.uploadFotoProfil
+                                color: root.customAvatarPath !== "" ? "#2ecc71" : window.textPrimary
+                                font.pixelSize: 13; font.bold: true
+                            }
+                            Text {
+                                text: root.customAvatarPath !== ""
+                                      ? root.customAvatarPath.toString().replace(/.*[\/\\]/, "").substring(0, 30) + "..."
+                                      : lang.klikUntukPilih
+                                color: window.textMuted; font.pixelSize: 11
+                                elide: Text.ElideRight
+                            }
+                        }
+                        Rectangle {
+                            width: 26; height: 26; radius: 13
+                            color: clearArea.pressed ? "#cc2222" : "#ff4444"
+                            visible: root.customAvatarPath !== ""
+                            z: 20
+                            Text { anchors.centerIn: parent; text: "✕"; color: "white"; font.pixelSize: 11; font.bold: true }
+                            MouseArea {
+                                id: clearArea; anchors.fill: parent; cursorShape: Qt.PointingHandCursor
+                                propagateComposedEvents: false
+                                onClicked: function(mouse) {
+                                    mouse.accepted = true
+                                    root.customAvatarPath   = ""
+                                    window.customAvatarPath = ""
+                                    root.selectedAvatar     = 0
+                                    window.selectedAvatar   = 0
+                                }
+                            }
+                        }
+                    }
+                    MouseArea {
+                        id: uploadArea; anchors.fill: parent; cursorShape: Qt.PointingHandCursor; hoverEnabled: true; z: 1
+                        onClicked: function(mouse) {
+                            if (root.customAvatarPath === "") avatarFilePicker.open()
+                        }
+                    }
+                }
 
                 Rectangle {
                     Layout.fillWidth: true; height: 220
@@ -246,36 +451,183 @@ Rectangle {
                                     border.color: root.selectedAvatar === index ? window.accentColor : window.borderColor
                                     border.width: root.selectedAvatar === index ? 2 : 1
                                     Text { anchors.centerIn: parent; text: modelData; font.pixelSize: 28 }
-                                    MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: root.selectedAvatar = index }
+                                    MouseArea {
+                                        anchors.fill: parent; cursorShape: Qt.PointingHandCursor
+                                        onClicked: {
+                                            root.selectedAvatar = index
+                                            root.customAvatarPath = ""
+                                            window.customAvatarPath = ""
+                                        }
+                                    }
                                 }
                             }
                         }
                     }
                 }
 
-                SectionTitle { judul: lang.namaTampilan }
+                SectionTitle { judul: "✨  " + lang.profil + " Border" }
+
+                // ── Border names (indeks 0-49) ─────────────────────────────
+                readonly property var borderNames: [
+                    "Default",     "Kawaii",       "Galaxy PNG",  "Rainbow PNG",
+                    "Pelangi",     "Api",          "Laut",        "Galaxy",
+                    "Sakura",      "Neon Hijau",   "Magma",       "Es Biru",
+                    "Emas",        "Hutan",        "Anggur",      "Flamingo",
+                    "Toska",       "Matahari",     "Midnite",     "Neon Ungu",
+                    "Merah Bara",  "Emerald",      "Oranye",      "Biru Peter",
+                    "Lavender",    "Hijau Segar",  "Sunset",      "Langit",
+                    "Neon Merah",  "Menta",        "Magenta",     "Gelap Royal",
+                    "Peach",       "Pastel Ungu",  "Persik",      "Lemon Mint",
+                    "Matrix",      "Candy",        "Cyber",       "Soft Biru",
+                    "Krim",        "Lilac",        "Rose",        "Seafoam",
+                    "Dusk",        "Flamingo 2",   "Portal",      "Neon Volt",
+                    "Bunga",       "Neon Cyan",
+                ]
+
                 Rectangle {
-                    Layout.fillWidth: true; height: 52; color: window.bgSecondary; radius: 12; border.color: window.borderColor
-                    TextField {
-                        anchors.fill: parent; anchors.margins: 4; text: window.namaUser
-                        color: window.textPrimary; font.pixelSize: 14; padding: 12; placeholderText: lang.namaKamu
-                        background: Rectangle { color: "transparent" }
-                        onTextChanged: { root.namaUser = text; window.namaUser = text }
+                    Layout.fillWidth: true; height: 160
+                    color: window.bgSecondary; radius: 12; border.color: window.borderColor; clip: true
+
+                    ScrollView {
+                        anchors.fill: parent; anchors.margins: 10
+                        ScrollBar.vertical.policy: ScrollBar.AlwaysOff
+                        ScrollBar.horizontal.policy: ScrollBar.AsNeeded
+                        contentWidth: borderRow.implicitWidth
+                        contentHeight: availableHeight
+
+                        Row {
+                            id: borderRow
+                            spacing: 10
+                            height: parent.height
+
+                            // ── Border 0: Default ────────────────────────────
+                            Column {
+                                spacing: 4; anchors.verticalCenter: parent.verticalCenter
+                                Rectangle {
+                                    width: 56; height: 56; radius: 28
+                                    color: window.bgCard
+                                    border.color: window.selectedBorder === 0 ? window.accentColor : window.borderColor
+                                    border.width: window.selectedBorder === 0 ? 3 : 1
+                                    scale: window.selectedBorder === 0 ? 1.1 : 1.0
+                                    Behavior on scale { NumberAnimation { duration: 150 } }
+                                    Text { anchors.centerIn: parent; text: window.selectedBorder === 0 ? "✓" : "○"; color: window.accentColor; font.pixelSize: 20; font.bold: true }
+                                    MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: { window.selectedBorder = 0; root.showNotif("Border 'Default' " + lang.aktif + " ✨") } }
+                                }
+                                Text { text: "Default"; color: window.selectedBorder === 0 ? window.accentColor : window.textMuted; font.pixelSize: 9; anchors.horizontalCenter: parent.horizontalCenter }
+                            }
+
+                            // ── Border 1-3: PNG (Kawaii, Galaxy, Rainbow) ────
+                            Repeater {
+                                model: [
+                                    { id: 1, label: "Kawaii",   asset: "qrc:/StudyTrackerApp/borders/kawaii.png" },
+                                    { id: 2, label: "Galaxy",   asset: "qrc:/StudyTrackerApp/borders/galaxy.png" },
+                                    { id: 3, label: "Rainbow",  asset: "qrc:/StudyTrackerApp/borders/rainbow.png" },
+                                ]
+                                delegate: Column {
+                                    spacing: 4; anchors.verticalCenter: parent.verticalCenter
+                                    Rectangle {
+                                        width: 56; height: 56; radius: 28; color: window.bgCard; clip: true
+                                        border.color: window.selectedBorder === modelData.id ? window.accentColor : window.borderColor
+                                        border.width: window.selectedBorder === modelData.id ? 3 : 1
+                                        scale: window.selectedBorder === modelData.id ? 1.1 : 1.0
+                                        Behavior on scale { NumberAnimation { duration: 150 } }
+                                        Image {
+                                            id: pngImg
+                                            anchors.fill: parent; source: modelData.asset
+                                            fillMode: Image.PreserveAspectCrop
+                                            RotationAnimator {
+                                                target: pngImg; from: 0; to: 360; duration: 4000
+                                                loops: Animation.Infinite
+                                                running: window.selectedBorder === modelData.id
+                                            }
+                                        }
+                                        Text {
+                                            anchors.centerIn: parent; z: 1
+                                            text: window.selectedBorder === modelData.id ? "✓" : ""
+                                            color: "white"; font.pixelSize: 16; font.bold: true
+                                            style: Text.Outline; styleColor: "#000"
+                                        }
+                                        MouseArea {
+                                            anchors.fill: parent; cursorShape: Qt.PointingHandCursor
+                                            onClicked: { window.selectedBorder = modelData.id; root.showNotif("Border '" + modelData.label + "' " + lang.aktif + " ✨") }
+                                        }
+                                    }
+                                    Text { text: modelData.label; color: window.selectedBorder === modelData.id ? window.accentColor : window.textMuted; font.pixelSize: 9; anchors.horizontalCenter: parent.horizontalCenter }
+                                }
+                            }
+
+                            // ── Border 4-49: Gradasi Canvas ──────────────────
+                            Repeater {
+                                model: 46   // id 4..49
+                                delegate: Column {
+                                    spacing: 4
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    property int bid: index + 4
+                                    property var bdef: window.borderDefs[bid]
+
+                                    Rectangle {
+                                        id: gradBtnRect
+                                        width: 56; height: 56; radius: 28
+                                        color: window.bgCard
+                                        border.color: "transparent"; border.width: 0
+                                        scale: window.selectedBorder === bid ? 1.1 : 1.0
+                                        Behavior on scale { NumberAnimation { duration: 150 } }
+
+                                        Canvas {
+                                            id: gradBtnCanvas
+                                            anchors.fill: parent
+                                            property real angle: 0
+                                            NumberAnimation on angle {
+                                                from: 0; to: Math.PI * 2
+                                                duration: bdef ? bdef.dur : 2000
+                                                loops: Animation.Infinite; running: true
+                                            }
+                                            onAngleChanged: requestPaint()
+                                            onPaint: {
+                                                var ctx = getContext("2d")
+                                                ctx.clearRect(0, 0, width, height)
+                                                if (!bdef) return
+                                                var cx = width / 2, cy = height / 2
+                                                var lw = window.selectedBorder === bid ? (bdef.lw + 1) : bdef.lw
+                                                var x1 = cx + Math.cos(angle) * cx
+                                                var y1 = cy + Math.sin(angle) * cy
+                                                var x2 = cx + Math.cos(angle + Math.PI) * cx
+                                                var y2 = cy + Math.sin(angle + Math.PI) * cy
+                                                var grad = ctx.createLinearGradient(x1, y1, x2, y2)
+                                                grad.addColorStop(0, bdef.c1)
+                                                grad.addColorStop(1, bdef.c2)
+                                                ctx.strokeStyle = grad
+                                                ctx.lineWidth = lw
+                                                ctx.beginPath()
+                                                ctx.arc(cx, cy, cx - lw / 2 - 1, 0, Math.PI * 2)
+                                                ctx.stroke()
+                                            }
+                                        }
+                                        Text {
+                                            anchors.centerIn: parent
+                                            text: window.selectedBorder === bid ? "✓" : ""
+                                            color: bdef ? bdef.c1 : "white"; font.pixelSize: 16; font.bold: true
+                                        }
+                                        MouseArea {
+                                            anchors.fill: parent; cursorShape: Qt.PointingHandCursor
+                                            onClicked: {
+                                                window.selectedBorder = bid
+                                                root.showNotif("Border '" + profilContent.borderNames[bid] + "' " + lang.aktif + " ✨")
+                                            }
+                                        }
+                                    }
+                                    Text {
+                                        text: profilContent.borderNames[bid] ?? ("Border " + bid)
+                                        color: window.selectedBorder === bid ? window.accentColor : window.textMuted
+                                        font.pixelSize: 9; anchors.horizontalCenter: parent.horizontalCenter
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
-
-                SectionTitle { judul: lang.statusLabel }
-                Rectangle {
-                    Layout.fillWidth: true; height: 52; color: window.bgSecondary; radius: 12; border.color: window.borderColor
-                    TextField {
-                        anchors.fill: parent; anchors.margins: 4; text: window.statusUser
-                        color: window.textPrimary; font.pixelSize: 14; padding: 12; placeholderText: "Status kamu..."
-                        background: Rectangle { color: "transparent" }
-                        onTextChanged: { root.statusUser = text; window.statusUser = text }
-                    }
+                Item { height: 32 }
                 }
-
-                Item { Layout.fillHeight: true }
             }
 
             // ── NOTIFIKASI ────────────────────────────────────────────────────
@@ -382,9 +734,17 @@ Rectangle {
             // ── TAMPILAN & BAHASA ─────────────────────────────────────────────
             // ══════════════════════════════════════════════════════════════════
             // ── TAMPILAN & BAHASA ─────────────────────────────────────────────────
-            ColumnLayout {
-                anchors.fill: parent; anchors.margins: 32; spacing: 14
+            ScrollView {
+                anchors.fill: parent
                 visible: settingStack.currentId === "tampilan"
+                contentWidth: availableWidth
+                ScrollBar.horizontal.policy: ScrollBar.AlwaysOff
+                ScrollBar.vertical.policy: ScrollBar.AsNeeded
+
+            ColumnLayout {
+                width: parent.width - 64
+                x: 32; y: 32
+                spacing: 14
 
                 SectionTitle { judul: "🎨  " + lang.temaWarna }
 
@@ -393,13 +753,116 @@ Rectangle {
                     spacing: 10
                     Repeater {
                         model: [
-                            { key: "gelap",   label: "Gelap",   emoji: "🌙", bg2: "#0a2a43", accent: "#ffcc00" },
-                            { key: "hitam",   label: "Hitam",   emoji: "⬛", bg2: "#141414", accent: "#ffffff" },
-                            { key: "putih",   label: "Putih",   emoji: "☀️", bg2: "#dde4eb", accent: "#1565c0" },
-                            { key: "pink",    label: "Pink",    emoji: "🌸", bg2: "#2d1020", accent: "#ff6eb4" },
-                            { key: "laut",    label: "Laut",    emoji: "🌊", bg2: "#112d54", accent: "#38bdf8" },
-                            { key: "adem",    label: "Adem",    emoji: "🌿", bg2: "#0e2e1c", accent: "#4ecca3" },
-                            { key: "vintage", label: "Vintage", emoji: "🍂", bg2: "#2e1f0e", accent: "#d4a24c" },
+                            // ── Tema Gelap ───────────────────────────────────
+                            { key: "gelap",        label: "Gelap",        emoji: "🌙", bg2: "#0a2a43", accent: "#ffcc00" },
+                            { key: "hitam",        label: "Hitam",        emoji: "⬛", bg2: "#141414", accent: "#ffffff" },
+                            { key: "gelap_merah",  label: "Darah",        emoji: "🩸", bg2: "#2a0a0a", accent: "#ff3333" },
+                            { key: "gelap_ungu",   label: "Dracula",      emoji: "🧛", bg2: "#1e1433", accent: "#bd93f9" },
+                            { key: "gelap_hijau",  label: "Matrix",       emoji: "💻", bg2: "#0a1a0a", accent: "#00ff41" },
+                            { key: "gelap_biru",   label: "Midnight",     emoji: "🌃", bg2: "#0d1b2a", accent: "#4fc3f7" },
+                            { key: "gelap_oranye", label: "Lava",         emoji: "🌋", bg2: "#1a0d00", accent: "#ff6d00" },
+                            { key: "gelap_toska",  label: "Abyss",        emoji: "🌊", bg2: "#001a1a", accent: "#00e5cc" },
+                            { key: "gelap_kuning", label: "Neon Night",   emoji: "🟡", bg2: "#111100", accent: "#ffe600" },
+                            { key: "gelap_silver", label: "Steel",        emoji: "⚙️", bg2: "#0e1117", accent: "#b0bec5" },
+                            // ── Tema Terang ──────────────────────────────────
+                            { key: "putih",        label: "Putih",        emoji: "☀️",  bg2: "#dde4eb", accent: "#1565c0" },
+                            { key: "krem",         label: "Krem",         emoji: "🍦",  bg2: "#f5efe0", accent: "#8d5524" },
+                            { key: "pastel_pink",  label: "Kawaii",       emoji: "🎀",  bg2: "#ffe0ec", accent: "#e91e8c" },
+                            { key: "pastel_biru",  label: "Baby Blue",    emoji: "🫧",  bg2: "#daeaf7", accent: "#1976d2" },
+                            { key: "pastel_hijau", label: "Mint Fresh",   emoji: "🍃",  bg2: "#d8f3dc", accent: "#2d6a4f" },
+                            { key: "pastel_ungu",  label: "Lavender",     emoji: "💜",  bg2: "#ede7f6", accent: "#6a1b9a" },
+                            { key: "pastel_kuning",label: "Sunny",        emoji: "🌞",  bg2: "#fff9c4", accent: "#f57f17" },
+                            { key: "pastel_peach", label: "Peach",        emoji: "🍑",  bg2: "#ffe8d6", accent: "#bf5700" },
+                            { key: "nordic",       label: "Nordic",       emoji: "❄️",  bg2: "#e8edf2", accent: "#2e7d8c" },
+                            { key: "paper",        label: "Paper",        emoji: "📄",  bg2: "#f4f1ea", accent: "#5d4037" },
+                            // ── Tema Warna Solid ─────────────────────────────
+                            { key: "pink",         label: "Pink",         emoji: "🌸", bg2: "#2d1020", accent: "#ff6eb4" },
+                            { key: "merah",        label: "Ruby",         emoji: "❤️", bg2: "#2a0808", accent: "#f44336" },
+                            { key: "oranye",       label: "Oranye",       emoji: "🍊", bg2: "#1a0d00", accent: "#ff9800" },
+                            { key: "kuning",       label: "Kuning",       emoji: "🌟", bg2: "#1a1600", accent: "#fdd835" },
+                            { key: "hijau",        label: "Hijau",        emoji: "🍀", bg2: "#091a09", accent: "#4caf50" },
+                            { key: "toska",        label: "Toska",        emoji: "🦚", bg2: "#001a18", accent: "#26a69a" },
+                            { key: "laut",         label: "Laut",         emoji: "🌊", bg2: "#112d54", accent: "#38bdf8" },
+                            { key: "biru",         label: "Biru",         emoji: "💙", bg2: "#0a1a40", accent: "#2196f3" },
+                            { key: "ungu",         label: "Ungu",         emoji: "🔮", bg2: "#150a2a", accent: "#9c27b0" },
+                            { key: "coklat",       label: "Coklat",       emoji: "🍫", bg2: "#1c100a", accent: "#795548" },
+                            // ── Tema Alam ────────────────────────────────────
+                            { key: "adem",         label: "Adem",         emoji: "🌿", bg2: "#0e2e1c", accent: "#4ecca3" },
+                            { key: "hutan",        label: "Hutan",        emoji: "🌲", bg2: "#0a1f0a", accent: "#8bc34a" },
+                            { key: "gurun",        label: "Gurun",        emoji: "🏜️", bg2: "#2a1e0a", accent: "#ffb300" },
+                            { key: "salju",        label: "Salju",        emoji: "☃️", bg2: "#d0dde8", accent: "#0288d1" },
+                            { key: "pantai",       label: "Pantai",       emoji: "🏖️", bg2: "#0d2a36", accent: "#00bcd4" },
+                            { key: "aurora",       label: "Aurora",       emoji: "🌌", bg2: "#061020", accent: "#00e5ff" },
+                            { key: "musim_gugur",  label: "Gugur",        emoji: "🍁", bg2: "#1a0e00", accent: "#ff8f00" },
+                            { key: "musim_semi",   label: "Semi",         emoji: "🌸", bg2: "#1a1000", accent: "#f48fb1" },
+                            { key: "volcano",      label: "Vulkanik",     emoji: "🌋", bg2: "#1a0500", accent: "#ff5722" },
+                            { key: "bambu",        label: "Bambu",        emoji: "🎍", bg2: "#111a08", accent: "#aed581" },
+                            // ── Tema Makanan & Minuman ───────────────────────
+                            { key: "kopi",         label: "Kopi",         emoji: "☕", bg2: "#1c1008", accent: "#d7a86e" },
+                            { key: "matcha",       label: "Matcha",       emoji: "🍵", bg2: "#0e1a0a", accent: "#69b578" },
+                            { key: "boba",         label: "Boba",         emoji: "🧋", bg2: "#1a1020", accent: "#cc99ff" },
+                            { key: "stroberi",     label: "Stroberi",     emoji: "🍓", bg2: "#1a0810", accent: "#f06292" },
+                            { key: "blueberry",    label: "Blueberry",    emoji: "🫐", bg2: "#0a0a1a", accent: "#7986cb" },
+                            { key: "vanilla",      label: "Vanilla",      emoji: "🍨", bg2: "#e8dfc8", accent: "#795548" },
+                            { key: "coklat_susu",  label: "Choco Milk",   emoji: "🍫", bg2: "#1e140a", accent: "#bcaaa4" },
+                            { key: "nasi",         label: "Nasi Goreng",  emoji: "🍳", bg2: "#1a1000", accent: "#ffcc80" },
+                            { key: "teh_tarik",    label: "Teh Tarik",    emoji: "🧃", bg2: "#1a0e08", accent: "#ffa726" },
+                            { key: "es_krim",      label: "Es Krim",      emoji: "🍦", bg2: "#ffe8f0", accent: "#e91e8c" },
+                            // ── Tema Pop Culture ─────────────────────────────
+                            { key: "vintage",      label: "Vintage",      emoji: "🍂", bg2: "#2e1f0e", accent: "#d4a24c" },
+                            { key: "retro",        label: "Retro 80s",    emoji: "📺", bg2: "#0a001a", accent: "#ff00ff" },
+                            { key: "vaporwave",    label: "Vaporwave",    emoji: "🌴", bg2: "#1a0028", accent: "#ff71ce" },
+                            { key: "cyberpunk",    label: "Cyberpunk",    emoji: "🤖", bg2: "#0a0014", accent: "#ffe600" },
+                            { key: "lofi",         label: "Lo-fi",        emoji: "🎵", bg2: "#1a1428", accent: "#b39ddb" },
+                            { key: "cottagecore",  label: "Cottagecore",  emoji: "🌾", bg2: "#e8dcc8", accent: "#5d4e37" },
+                            { key: "dark_academia",label: "Dark Academia", emoji: "📚", bg2: "#1e1810", accent: "#c8a96e" },
+                            { key: "y2k",          label: "Y2K",          emoji: "💿", bg2: "#0a1428", accent: "#00ffff" },
+                            { key: "pastel_goth",  label: "Pastel Goth",  emoji: "🖤", bg2: "#1a0a1a", accent: "#cc99ff" },
+                            { key: "skater",       label: "Skater",       emoji: "🛹", bg2: "#0f0f0f", accent: "#ff4500" },
+                            // ── Tema Angkasa & Sci-fi ────────────────────────
+                            { key: "galaxy",       label: "Galaxy",       emoji: "🌌", bg2: "#050520", accent: "#7c4dff" },
+                            { key: "nebula",       label: "Nebula",       emoji: "✨", bg2: "#0d0520", accent: "#e040fb" },
+                            { key: "cosmos",       label: "Cosmos",       emoji: "🪐", bg2: "#060a1e", accent: "#40c4ff" },
+                            { key: "mars",         label: "Mars",         emoji: "🔴", bg2: "#1a0a05", accent: "#ff6e40" },
+                            { key: "bulan",        label: "Bulan",        emoji: "🌕", bg2: "#0e0e14", accent: "#eeeeee" },
+                            { key: "bima_sakti",   label: "Bima Sakti",   emoji: "🌠", bg2: "#040418", accent: "#82b1ff" },
+                            { key: "blackhole",    label: "Black Hole",   emoji: "🕳️", bg2: "#000005", accent: "#ea80fc" },
+                            { key: "neon_space",   label: "Neon Space",   emoji: "🚀", bg2: "#080018", accent: "#69ff47" },
+                            { key: "asteroid",     label: "Asteroid",     emoji: "☄️", bg2: "#0a0808", accent: "#ff6d00" },
+                            { key: "saturn",       label: "Saturnus",     emoji: "🪐", bg2: "#0d1020", accent: "#ffca28" },
+                            // ── Tema Seni & Estetika ─────────────────────────
+                            { key: "monokrom",     label: "Monokrom",     emoji: "🎭", bg2: "#1a1a1a", accent: "#aaaaaa" },
+                            { key: "sepia",        label: "Sepia",        emoji: "📷", bg2: "#2a1e10", accent: "#c8a96e" },
+                            { key: "neon",         label: "Neon",         emoji: "💡", bg2: "#050505", accent: "#39ff14" },
+                            { key: "glassmorphism",label: "Glassmorphic", emoji: "🔷", bg2: "#1a2240", accent: "#90caf9" },
+                            { key: "bauhaus",      label: "Bauhaus",      emoji: "🟥", bg2: "#f5f0e8", accent: "#e53935" },
+                            { key: "memphis",      label: "Memphis",      emoji: "🔶", bg2: "#fafafa", accent: "#ff6f00" },
+                            { key: "brutalist",    label: "Brutalist",    emoji: "🏗️", bg2: "#e8e0d0", accent: "#212121" },
+                            { key: "grunge",       label: "Grunge",       emoji: "🎸", bg2: "#1a1008", accent: "#9e9d24" },
+                            { key: "watercolor",   label: "Watercolor",   emoji: "🎨", bg2: "#e8f4f8", accent: "#0277bd" },
+                            { key: "noir",         label: "Noir",         emoji: "🕵️", bg2: "#0a0a0a", accent: "#c8b8a2" },
+                            // ── Tema Budaya ──────────────────────────────────
+                            { key: "sakura",       label: "Sakura",       emoji: "🌸", bg2: "#1a0a14", accent: "#f48fb1" },
+                            { key: "samurai",      label: "Samurai",      emoji: "⚔️", bg2: "#0a0a00", accent: "#c62828" },
+                            { key: "batik",        label: "Batik",        emoji: "🪱", bg2: "#1a0e00", accent: "#ff8f00" },
+                            { key: "melayu",       label: "Melayu",       emoji: "🏝️", bg2: "#0a1a14", accent: "#4db6ac" },
+                            { key: "india",        label: "India",        emoji: "🕌", bg2: "#1a0a00", accent: "#ff9800" },
+                            { key: "nordic2",      label: "Viking",       emoji: "🪓", bg2: "#0e1820", accent: "#78909c" },
+                            { key: "aztec",        label: "Aztec",        emoji: "🌞", bg2: "#1a0e00", accent: "#ffca28" },
+                            { key: "mediterania",  label: "Mediterania",  emoji: "🫒", bg2: "#0a1814", accent: "#26a69a" },
+                            { key: "amazon",       label: "Amazon",       emoji: "🐍", bg2: "#0a1a08", accent: "#66bb6a" },
+                            { key: "arctic",       label: "Arktik",       emoji: "🐻‍❄️", bg2: "#0a1428", accent: "#b3e5fc" },
+                            // ── Tema Bonus ───────────────────────────────────
+                            { key: "neon_pink",    label: "Neon Pink",    emoji: "💗", bg2: "#1a001a", accent: "#ff4dd2" },
+                            { key: "emerald",      label: "Emerald",      emoji: "💚", bg2: "#001a0e", accent: "#00e676" },
+                            { key: "amber",        label: "Amber",        emoji: "🟠", bg2: "#1a0e00", accent: "#ffab40" },
+                            { key: "indigo",       label: "Indigo",       emoji: "🫐", bg2: "#0a0a28", accent: "#536dfe" },
+                            { key: "rose_gold",    label: "Rose Gold",    emoji: "🌹", bg2: "#200a10", accent: "#f48fb1" },
+                            { key: "obsidian",     label: "Obsidian",     emoji: "🖤", bg2: "#08080c", accent: "#607d8b" },
+                            { key: "senja",        label: "Senja",        emoji: "🌇", bg2: "#1a0d10", accent: "#ff7043" },
+                            { key: "pagi",         label: "Pagi",         emoji: "🌅", bg2: "#ffe0b0", accent: "#e65100" },
+                            { key: "neon_biru",    label: "Neon Biru",    emoji: "🔵", bg2: "#000a18", accent: "#00b0ff" },
+                            { key: "pistachio",    label: "Pistachio",    emoji: "🌰", bg2: "#0e1a08", accent: "#c5e1a5" },
                         ]
                         delegate: Rectangle {
                             width: Math.floor((parent.width - 60) / 3)
@@ -493,7 +956,8 @@ Rectangle {
                     }
                 }
 
-                Item { Layout.fillHeight: true }
+                Item { height: 32 }
+            }
             }
 
             // ── AKUN & KEAMANAN ───────────────────────────────────────────────────
@@ -526,7 +990,7 @@ Rectangle {
                         Text {
                             id: passLamaError
                             visible: false
-                            text: "❌ Password lama salah!"
+                            text: lang.passwordLamaSalah
                             color: "#ff4444"; font.pixelSize: 12
                         }
                         TextField {
@@ -672,6 +1136,8 @@ Rectangle {
                                     window.globalTimerRunning = false
                                     window.globalCurrentTimerValue = 0
                                     // Reset profil pengguna ke default
+                                    window.customAvatarPath = ""
+                                    root.customAvatarPath   = ""
                                     window.namaUser       = "Pengguna"
                                     window.statusUser     = "Semangat Belajar! 💪"
                                     window.selectedAvatar = 0
@@ -710,10 +1176,105 @@ Rectangle {
                                 id: settConfirmArea; anchors.fill: parent; cursorShape: Qt.PointingHandCursor
                                 onClicked: {
                                     settingsLogoutPopup.close()
-                                    pageLoader.sourceComponent = loginComponent
+                                    var tasks = []
+                                    for (var i = 0; i < globalTaskModel.count; i++) {
+                                        var t = globalTaskModel.get(i)
+                                        tasks.push({
+                                            "title": t.title, "deadline": t.deadline,
+                                            "deadlineTimestamp": t.deadlineTimestamp, "isDone": t.isDone
+                                        })
+                                    }
+                                    backend.saveUserData(
+                                        window.currentUser, window.namaUser, window.statusUser,
+                                        window.selectedAvatar, window.globalSessionsCompleted,
+                                        window.globalSecondsFocused, tasks
+                                    )
+                                    pageStack.replace(null, loginComponent)
                                     isLoginView = true
                                 }
                             }
+                        }
+                    }
+                }
+            }
+        }
+
+    Popup {
+        id: cropPopup
+        anchors.centerIn: parent; width: 340; height: 440
+        modal: true; focus: true
+        closePolicy: Popup.CloseOnEscape
+
+        property string imagePath: ""
+        property real offsetX: 0
+        property real offsetY: 0
+
+        background: Rectangle { color: window.bgSecondary; radius: 16; border.color: window.accentColor; border.width: 2 }
+
+        ColumnLayout {
+            anchors.fill: parent; anchors.margins: 20; spacing: 14
+
+            Text { text: "✂️  " + lang.aturPosisiFoto; color: window.textPrimary; font.pixelSize: 15; font.bold: true; Layout.alignment: Qt.AlignHCenter }
+            Text { text: lang.geserFoto; color: window.textMuted; font.pixelSize: 12; Layout.alignment: Qt.AlignHCenter }
+
+            Rectangle {
+                width: 200; height: 200; radius: 100; clip: true
+                border.color: window.accentColor; border.width: 2
+                color: window.bgCard
+                Layout.alignment: Qt.AlignHCenter
+
+                // Gunakan Item sebagai clipping container - Image di dalamnya tidak bisa keluar
+                Item {
+                    id: cropContainer
+                    anchors.fill: parent
+                    clip: true
+
+                    Image {
+                        id: cropImage
+                        source: cropPopup.imagePath
+                        // Render lebih besar dari container supaya bisa digeser
+                        width: 200; height: 200
+                        fillMode: Image.PreserveAspectCrop
+                        // Clamp offset supaya gambar tidak bisa keluar lingkaran
+                        x: Math.max(-(implicitWidth - 200), Math.min(0, cropPopup.offsetX))
+                        y: Math.max(-(implicitHeight - 200), Math.min(0, cropPopup.offsetY))
+                    }
+                }
+                MouseArea {
+                    anchors.fill: parent; cursorShape: Qt.OpenHandCursor
+                    property real startX: 0; property real startY: 0
+                    property real startOffX: 0; property real startOffY: 0
+                    onPressed: { startX = mouseX; startY = mouseY; startOffX = cropPopup.offsetX; startOffY = cropPopup.offsetY }
+                    onPositionChanged: {
+                        cropPopup.offsetX = startOffX + (mouseX - startX)
+                        cropPopup.offsetY = startOffY + (mouseY - startY)
+                    }
+                }
+            }
+
+            Text { text: lang.petunjukGeser; color: window.textMuted; font.pixelSize: 11; Layout.alignment: Qt.AlignHCenter }
+
+            RowLayout {
+                Layout.fillWidth: true; spacing: 10
+                Rectangle {
+                    Layout.fillWidth: true; height: 40; radius: 8; color: window.borderColor
+                    Text { anchors.centerIn: parent; text: lang.batalFoto; color: window.textPrimary; font.bold: true }
+                    MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: cropPopup.close() }
+                }
+                Rectangle {
+                    Layout.fillWidth: true; height: 40; radius: 8; color: window.accentColor
+                    Text { anchors.centerIn: parent; text: lang.simpanFoto; color: "#001b2e"; font.bold: true }
+                    MouseArea {
+                        anchors.fill: parent; cursorShape: Qt.PointingHandCursor
+                        onClicked: {
+                            root.customAvatarPath   = cropPopup.imagePath
+                            window.customAvatarPath = cropPopup.imagePath
+                            window.avatarOffsetX    = cropPopup.offsetX
+                            window.avatarOffsetY    = cropPopup.offsetY
+                            root.selectedAvatar     = -1
+                            window.selectedAvatar   = -1
+                            cropPopup.close()
+                        }
                         }
                     }
                 }
