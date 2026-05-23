@@ -67,7 +67,7 @@ Rectangle {
                     anchors.fill: parent
                     hoverEnabled: true
                     cursorShape: Qt.PointingHandCursor
-                    onClicked: pageLoader.sourceComponent = mainComponent
+                    onClicked: pageStack.pop()
                 }
             }
 
