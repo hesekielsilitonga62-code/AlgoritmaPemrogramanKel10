@@ -109,7 +109,7 @@ Rectangle {
                 anchors.fill: parent
                 onClicked: {
                     isStudying = false
-                    pageLoader.sourceComponent = mainComponent
+                    pageStack.pop()
                 }
             }
         }
