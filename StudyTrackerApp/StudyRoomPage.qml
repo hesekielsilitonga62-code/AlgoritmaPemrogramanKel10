@@ -2,7 +2,7 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import QtMultimedia
-
+ 
 Rectangle {
     id: studyRoomRoot
     anchors.fill: parent
