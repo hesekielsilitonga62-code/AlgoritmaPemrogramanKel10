@@ -4,7 +4,7 @@ import QtQuick.Layouts
     
 Rectangle {
     id: inputTugasPage
-    anchors.fill: parent
+    anchors.fill: parent 
     color: window.bgPrimary
 
     property int editingIndex: -1
