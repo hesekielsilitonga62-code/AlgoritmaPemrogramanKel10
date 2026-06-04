@@ -1,7 +1,7 @@
 #include <QGuiApplication>
 #include <QQmlApplicationEngine>
 #include <QQmlContext>
-#include <QSslConfiguration>  
+#include <QSslConfiguration>   
 #include "authmanager.h"
 
 int main(int argc, char *argv[])
