@@ -4,7 +4,7 @@ import QtQuick.Layouts
 import QtMultimedia  
 
 ApplicationWindow {
-    id: window
+    id: window 
     width: 1280
     height: 720
     visible: true
