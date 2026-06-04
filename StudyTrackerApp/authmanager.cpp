@@ -2,7 +2,7 @@
 #include <QDebug>
 #include <QJsonDocument>
 #include <QJsonArray>
-#include <QJsonObject>
+#include <QJsonObject> 
 #include <QPixmap>
 #include <QImage>
 #include <QDir>
