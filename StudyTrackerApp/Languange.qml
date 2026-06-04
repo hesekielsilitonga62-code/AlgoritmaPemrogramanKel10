@@ -1,6 +1,6 @@
 import QtQuick
 
-Item {
+Item { 
     id: root
     readonly property string lang: window.selectedLanguage
 
