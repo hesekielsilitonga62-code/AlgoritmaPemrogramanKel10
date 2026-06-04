@@ -3,7 +3,7 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import QtMultimedia
 import QtQuick.Dialogs
-import StudyTrackerApp 
+import StudyTrackerApp  
 
 Rectangle {
     id: root
