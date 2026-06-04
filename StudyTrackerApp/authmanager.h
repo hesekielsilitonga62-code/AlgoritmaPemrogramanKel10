@@ -1,7 +1,7 @@
 #ifndef AUTHMANAGER_H
 #define AUTHMANAGER_H
 
-#include <QObject> 
+#include <QObject>  
 #include <QSettings>
 #include <QString>
 #include <QVariant>
