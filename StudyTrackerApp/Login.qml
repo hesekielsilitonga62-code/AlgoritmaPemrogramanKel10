@@ -2,7 +2,7 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 
-Rectangle {
+Rectangle { 
     id: loginRoot
     anchors.fill: parent
     color: "transparent"
