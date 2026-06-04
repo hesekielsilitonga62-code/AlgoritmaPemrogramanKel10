@@ -3,7 +3,7 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import QtMultimedia
 
-Rectangle {
+Rectangle {  
     id: root
     anchors.fill: parent
     color: window.bgPrimary
